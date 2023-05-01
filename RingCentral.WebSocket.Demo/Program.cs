@@ -15,6 +15,7 @@ await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/m
     Console.WriteLine(message);
 });
 
+// Trigger some notifications for testing purpose
 var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
 while (await timer.WaitForNextTickAsync())
 {
