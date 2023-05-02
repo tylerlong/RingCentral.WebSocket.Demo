@@ -8,7 +8,10 @@ var rc = new RestClient(envVars["RINGCENTRAL_CLIENT_ID"], envVars["RINGCENTRAL_C
 await rc.Authorize(envVars["RINGCENTRAL_JWT_TOKEN"]);
 Console.WriteLine(rc.token.access_token);
 
-var wsExtension = new WebSocketExtension();
+var wsExtension = new WebSocketExtension(new WebSocketOptions
+{
+    debugMode = true
+});
 await rc.InstallExtension(wsExtension);
 await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/message-store"}, message =>
 {
@@ -16,9 +19,10 @@ await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/m
 });
 
 // Trigger some notifications for testing purpose
-var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
+var timer = new PeriodicTimer(TimeSpan.FromMinutes(10));
 while (await timer.WaitForNextTickAsync())
 {
+    await rc.Refresh();
     await rc.Restapi().Account().Extension().CompanyPager().Post(new CreateInternalTextMessageRequest
     {
         text = "Hello world",
@@ -31,6 +35,7 @@ while (await timer.WaitForNextTickAsync())
             extensionId = rc.token.owner_id
         }}
     });
+    Console.WriteLine("Pager sent");
 }
 
 await rc.Revoke();
