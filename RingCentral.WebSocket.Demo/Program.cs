@@ -18,8 +18,18 @@ await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/m
     Console.WriteLine(message);
 });
 
+// Check if the connection has closed
+var timer2 = new PeriodicTimer(TimeSpan.FromMinutes(10));
+while (await timer2.WaitForNextTickAsync())
+{
+    if (!wsExtension.ws.IsRunning)
+    {
+        wsExtension.Reconnect();
+    }
+}
+
 // Trigger some notifications for testing purpose
-var timer = new PeriodicTimer(TimeSpan.FromMinutes(10));
+var timer = new PeriodicTimer(TimeSpan.FromMinutes(40));
 while (await timer.WaitForNextTickAsync())
 {
     await rc.Refresh();
@@ -35,7 +45,7 @@ while (await timer.WaitForNextTickAsync())
             extensionId = rc.token.owner_id
         }}
     });
-    Console.WriteLine("Pager sent");
+    Console.WriteLine("Pager sent at " + DateTime.Now.ToString("yyyyMMdd HHmmss"));
 }
 
 await rc.Revoke();
