@@ -10,7 +10,7 @@ Console.WriteLine(rc.token.access_token);
 
 var wsExtension = new WebSocketExtension(new WebSocketOptions
 {
-    debugMode = true
+    debugMode = false
 });
 await rc.InstallExtension(wsExtension);
 await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/message-store"}, message =>
@@ -18,21 +18,16 @@ await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/m
     Console.WriteLine(message);
 });
 
-// Check if the connection has closed
-var timer2 = new PeriodicTimer(TimeSpan.FromMinutes(10));
-while (await timer2.WaitForNextTickAsync())
-{
-    if (!wsExtension.ws.IsRunning)
-    {
-        wsExtension.Reconnect();
-    }
-}
-
 // Trigger some notifications for testing purpose
 var timer = new PeriodicTimer(TimeSpan.FromMinutes(40));
 while (await timer.WaitForNextTickAsync())
 {
     await rc.Refresh();
+    // Check if the connection has closed
+    if (!wsExtension.ws.IsRunning)
+    {
+        await wsExtension.Reconnect();
+    }
     await rc.Restapi().Account().Extension().CompanyPager().Post(new CreateInternalTextMessageRequest
     {
         text = "Hello world",
