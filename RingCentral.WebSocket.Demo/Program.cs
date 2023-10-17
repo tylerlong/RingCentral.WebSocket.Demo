@@ -1,5 +1,6 @@
 ﻿using RingCentral;
 using dotenv.net;
+using Newtonsoft.Json;
 using RingCentral.Net.WebSocket;
 
 var envVars = DotEnv.Read();
@@ -10,7 +11,7 @@ Console.WriteLine(rc.token.access_token);
 
 var wsExtension = new WebSocketExtension(new WebSocketOptions
 {
-    debugMode = false
+    debugMode = true
 });
 await rc.InstallExtension(wsExtension);
 await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/message-store"}, message =>
@@ -18,13 +19,42 @@ await wsExtension.Subscribe(new string[] {"/restapi/v1.0/account/~/extension/~/m
     Console.WriteLine(message);
 });
 
+var reconnecting = false;
+wsExtension.MessageReceived += async (sender, message) =>
+{
+    var str = JsonConvert.SerializeObject(message);
+    if(!reconnecting && str.Contains("\"OAU-")) // some error regarding OAuth
+    {
+        reconnecting = true;
+        Console.WriteLine("Token expired/revoked for some reason, I need to reconnect()");
+        try
+        {
+            await rc.Refresh();
+        }
+        catch
+        {
+            await rc.Authorize(envVars["RINGCENTRAL_JWT_TOKEN"]);
+        }
+        await wsExtension.Reconnect();
+        reconnecting = false;
+    }
+};
+
 // Trigger some notifications for testing purpose
-var timer = new PeriodicTimer(TimeSpan.FromMinutes(40));
+var timer = new PeriodicTimer(TimeSpan.FromMinutes(3));
 while (await timer.WaitForNextTickAsync())
 {
-    await rc.Refresh();
+    try
+    {
+        await rc.Refresh();
+    }
+    catch
+    {
+        await rc.Authorize(envVars["RINGCENTRAL_JWT_TOKEN"]);
+    }
+
     // Check if the connection has closed
-    if (!wsExtension.ws.IsRunning)
+    if (!reconnecting && !wsExtension.ws.IsRunning)
     {
         await wsExtension.Reconnect();
     }
