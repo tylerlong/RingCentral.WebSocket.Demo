@@ -53,7 +53,14 @@ wsExtension.RawMessageReceived += async (sender, str) =>
     {
         reconnecting = true;
         Console.WriteLine("Token expired/revoked for some reason, I need to reconnect()");
-        await rc.Authorize(envVars["RINGCENTRAL_JWT_TOKEN"]);
+        try
+        {
+            await rc.Refresh();
+        }
+        catch
+        {
+            await rc.Authorize(envVars["RINGCENTRAL_JWT_TOKEN"]);
+        }
         await wsExtension.Reconnect();
         reconnecting = false;
     }
