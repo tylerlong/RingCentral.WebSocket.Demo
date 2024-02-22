@@ -105,3 +105,5 @@ while (await timer.WaitForNextTickAsync())
     });
     Console.WriteLine("Pager sent at " + DateTime.Now.ToString("yyyyMMdd HHmmss"));
 }
+
+// !! code will never reach here
