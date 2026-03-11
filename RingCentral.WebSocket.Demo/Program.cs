@@ -22,7 +22,7 @@ await rc.InstallExtension(wsExtension);
 // This is necessary, if the token expires, eventually your WebSocket connection will stop working
 // By default token expires every hour, it is perfectly fine to refresh it every 30 minutes. There is no need to to refresh it at a shorter interval
 var aTimer = new Timer();
-aTimer.Elapsed += new ElapsedEventHandler(async (object source, ElapsedEventArgs e) =>
+aTimer.Elapsed += new ElapsedEventHandler(async (object? source, ElapsedEventArgs e) =>
 {
     try
     {
@@ -50,7 +50,7 @@ await wsExtension.Subscribe(new string[]
 // Special case: Server will disconnect you every 24 hours (absoluteTimeout), and it is handled by the SDK to reconnect. So it may not hit the logic below.
 var bTimer = new Timer();
 var reconnecting = false;
-bTimer.Elapsed += new ElapsedEventHandler(async (object source, ElapsedEventArgs e) =>
+bTimer.Elapsed += new ElapsedEventHandler(async (object? source, ElapsedEventArgs e) =>
 {
     // Check if the connection has closed
     if (!reconnecting && !wsExtension.ws.IsRunning)
