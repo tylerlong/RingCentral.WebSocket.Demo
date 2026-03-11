@@ -4,7 +4,8 @@ using RingCentral;
 using RingCentral.Net.WebSocket;
 using Timer = System.Timers.Timer;
 
-var envVars = DotEnv.Read();
+var envVars = DotEnv.Read(options: new DotEnvOptions(
+    envFilePaths: new[] { ".env", "RingCentral.WebSocket.Demo/.env" }));
 
 var rc = new RestClient(envVars["RINGCENTRAL_CLIENT_ID"], envVars["RINGCENTRAL_CLIENT_SECRET"],
     envVars["RINGCENTRAL_SERVER_URL"]);
